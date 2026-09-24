@@ -103,11 +103,16 @@ def densidad (altura_feets):
     return p
 def get_VminROD(Thrust, altura, Area, CDO, Weight):
     VminROD = ((((2*Thrust*densidad(altura))**2)*Area)+(4*(3*densidad(altura)**2*Area**2*CDO*4*CDO*Weight**2))**0.5/(2*3*densidad(altura)**2*Area**2*CDO))**0.5
+    return VminROD
 
 ThrustMax = CT1 * (1 - (Hp/CT2) + CT3*(Hp**2))
 #ThrustDesc = CTDescH * ThrustMax
 ThrustDescClean = CTDescL * ThrustMax
 ThrustDescApp = CTDescApp * ThrustMax
+
+def get_CL (altura, Area, Velocidad, Weight):
+    CL = 2*Weight/(Area*densidad(altura)*Velocidad)
+    return Cl
 
 CDapp = CD0app + CD2app * CL**2
 
