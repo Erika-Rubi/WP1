@@ -85,7 +85,13 @@ P0 = 1013.250
 p0 = 1.225
 R = 287.04
 
-def relacion_densidad (altura_feets):
+hf = 0
+hfmax = 12000
+Hfchange = 6000
+
+x = 0
+
+def densidad (altura_feets):
 
     hf = altura_feets
     h = hf * 0.3048
@@ -94,6 +100,20 @@ def relacion_densidad (altura_feets):
 
     p = (P*100/(R*T))
 
-    return p/p0
+    return p
+def get_VminROD(Thrust, altura, Area, CDO, Weight):
+    VminROD = ((((2*Thrust*densidad(altura))**2)*Area)+(4*(3*densidad(altura)**2*Area**2*CDO*4*CDO*Weight**2))**0.5/(2*3*densidad(altura)**2*Area**2*CDO))**0.5
+
+ThrustMax = CT1 * (1 - (Hp/CT2) + CT3*(Hp**2))
+#ThrustDesc = CTDescH * ThrustMax
+ThrustDescClean = CTDescL * ThrustMax
+ThrustDescApp = CTDescApp * ThrustMax
+
+CDapp = CD0app + CD2app * CL**2
+
+
+
+
+while :
 
 
