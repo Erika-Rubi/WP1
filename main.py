@@ -81,12 +81,19 @@ for i in range(len(names)):
     aircrafts.append(aircraft)
 
 T0 = 288.15
-hf = 0
-h = hf * 0.3048
-P0 = 1013.25
-R = 8.314
+P0 = 1013.250
+p0 = 1.225
+R = 287.04
 
-T = T0 - 1.98*(hf/1000)
-P = P0 * ((1-0.0065*(h/T0))**5.2561)
+def relacion_densidad (altura_feets):
 
-p = (P/R*T)/10000
+    hf = altura_feets
+    h = hf * 0.3048
+    T = T0 - (1.98*(hf/1000))
+    P = P0 * (1-(0.0065*(h/T0)))**5.2561
+
+    p = (P*100/(R*T))
+
+    return p/p0
+
+
