@@ -28,6 +28,7 @@ class Aircraft:
         self.position = [0,5000]
 
 
+
 # Datos
 names = ["B767-300ER", "B777-300", "B737", "A320-212", "A319-131"]
 
@@ -155,9 +156,6 @@ def get_CL (Weight, velocity, altura, Area):
     return CL
 
 
-
-
-hf =
 def get_CDO (Aircraft_model, MLW):
     moved = [0,0]
     for i in aircrafts:
@@ -170,6 +168,33 @@ def get_CDO (Aircraft_model, MLW):
 
 
 
-while :
+#PLOT
+#function [x,h] = getCDO(aircraft_model,MLW_percent)
+import matplotlib.pyplot as plt
+MLW_percent1=0.8
+MLW_percent2=1
+i=0
+while i<len(aircrafts) :
+    MLW_enUSO=0
+    if i % 2 == 0:
+        MLW_enUSO = MLW_percent1
+    else:
+        MLW_enUSO = MLW_percent2
+    vectorX=[]
+    vectorY=[]
+    while aircrafts[i].position[1] < 40000:
+        x, y = get_CDO(aircrafts[i], MLW_enUSO)
+        vectorX.append(x)
+        vectorY.append(y)
+        aircrafts[i].position[1] += 1000
+
+    plt.plot(vectorX, vectorY, label=aircrafts[i].name)
+    i = i + 1
+
+plt.xlabel("Distance")
+plt.ylabel("Height")
+plt.title("CDO's trajectories")
+plt.legend()
+plt.show()
 
 
