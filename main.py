@@ -107,8 +107,10 @@ def densidad (altura):
     return p
 
 
-def get_VminROD(Thrust, altura, Area, CDO, Weight):
-    VminROD = ((((2*Thrust*densidad(altura))**2)*Area)+(4*(3*densidad(altura)**2*Area**2*CDO*4*CDO*Weight**2))**0.5/(2*3*densidad(altura)**2*Area**2*CDO))**0.5
+def get_VminROD(Thrust, altura, Area, CD0, CD2, Weight):
+
+    rho = densidad(altura)
+    VminROD = math.sqrt((Thrust + math.sqrt(Thrust**2 + 12 * CD0 * CD2 * Weight**2)) / (3 * rho * Area * CD0))
     return VminROD
 
 def get_ThrustMax(CT1, CT2, CT3, Hp):
@@ -129,9 +131,6 @@ def get_ThrustDesc(CTDescL, CTDescApp, CTDescH, ThrustMax, altura_feets, Hp):
         ThrustDescApp = CTDescApp * ThrustMax
         return ThrustDescApp
 
-def get_CL (altura, Area, Velocidad, Weight):
-    CL = 2*Weight/(Area*densidad(altura)*Velocidad)
-    return CL
 
 def get_CD (CD0app, CD2app, CD0clean, CD2clean, CL, altura):
     if altura > 6000:
@@ -141,12 +140,26 @@ def get_CD (CD0app, CD2app, CD0clean, CD2clean, CL, altura):
         CDapp = CD0app + CD2app * CL**2
         return CDapp
 
+def get_CD0 (CD0app, CD0clean, altura):
+    if altura > 6000:
+        return CD0clean
+    elif altura <= 6000:
+        return CD0app
+
+
+def get_CD2(CD2app, CD2clean, altura):
+    if altura > 6000:
+        return CD2clean
+    elif altura <= 6000:
+        return CD2app
+
+
 def get_TSFC (CF1, CF2, VminROD):
     TSFC = CF1 * (1+ ((VminROD/0.514444)/CF2))
     return TSFC
 
 def get_FF (TSFC, ThrustDesc, t):
-    FF = 1000*TSFC*ThrustDesc*t
+    FF = TSFC*ThrustDesc*t/1000
     return FF
 #Fuelflow --> Kg/s
 
@@ -176,13 +189,15 @@ def get_CDO (aircraft, MLW):
     Thrust = get_ThrustDesc(aircraft.CTDescL, aircraft.CTDescApp,aircraft.CTDescH, ThrustMax, altura_feets, aircraft.Hp)
     Area = aircraft.S
     Weight = aircraft.Weight
-    CL = get_CL(Thrust, Area, aircraft.velocity, Weight)
-    CD = get_CD(aircraft.CD0app, aircraft.CD2app, aircraft.CD0clean, aircraft.CD2clean, CL,altura_feets)
-    velocity = get_VminROD(Thrust, altura_metres, Area,CD,Weight)
+    CD0 = get_CD0(aircraft.CD0app, aircraft.CD0clean, altura_feets)
+    CD2 = get_CD2(aircraft.CD2app, aircraft.CD2clean, altura_feets)
+    velocity = get_VminROD(Thrust, altura_metres, Area,CD0,CD2,Weight)
     aircraft.velocity = velocity
+    CL = get_CL(Weight, aircraft.velocity, altura_metres, Area)
+    CD = get_CD(aircraft.CD0app, aircraft.CD2app, aircraft.CD0clean, aircraft.CD2clean, CL,altura_feets)
     AoD = get_AoD(Thrust, CD, Weight, Area, altura_metres, aircraft.velocity)
-    moved[0] = math.sin(AoD)*velocity*dt #meters
-    moved[1] = (math.cos(AoD)*velocity*dt)/0.3048 #feet
+    moved[0] = math.cos(AoD)*velocity*dt #meters
+    moved[1] = -(math.sin(AoD)*velocity*dt)/0.3048 #feet
     aircraft.position[0] = aircraft.position[0] + moved[0]
     aircraft.position[1] = aircraft.position[1] + moved[1]
     TSFC = get_TSFC(aircraft.CF1, aircraft.CF2, aircraft.velocity)
@@ -207,7 +222,7 @@ while i<len(aircrafts) :
         MLW_enUSO = MLW_percent2
     vectorX=[]
     vectorY=[]
-    while aircrafts[i].position[1] < 40000:
+    while aircrafts[i].position[1] < 12000:
         x, y = get_CDO(aircrafts[i], MLW_enUSO)
         vectorX.append(x)
         vectorY.append(y)
