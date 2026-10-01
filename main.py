@@ -1,8 +1,11 @@
+import mathplotlib
+
+
 class Aircraft:
     def __init__(self, name, MLWeight, MWeight, MPayload, S,
                  CD0app, CD2app, CD0clean, CD2clean, Hp,
                  CTDescH, CTDescL, CTDescApp, CT1, CT2, CT3,
-                 CF1, CF2):
+                 CF1, CF2, position):
 
         self.name = name
         self.MLWeight = MLWeight
@@ -22,6 +25,10 @@ class Aircraft:
         self.CT3 = CT3
         self.CF1 = CF1
         self.CF2 = CF2
+        self.position = position #sera un vector (x,h)
+        velocity=0
+
+
 
 
 # Datos
@@ -101,9 +108,16 @@ def densidad (altura_feets):
     p = (P*100/(R*T))
 
     return p
-def get_VminROD(Thrust, altura, Area, CDO, Weight):
+def get_VminROD(Thrust, altura, Area, CDO, Weight, densidad):
     VminROD = ((((2*Thrust*densidad(altura))**2)*Area)+(4*(3*densidad(altura)**2*Area**2*CDO*4*CDO*Weight**2))**0.5/(2*3*densidad(altura)**2*Area**2*CDO))**0.5
     return VminROD
+
+i=0
+while len(aircrafts)>i:
+    aicraft = aircrafts[i]
+    get_VminROD(aicraft.thrust, aicraft.position[1], aicraft.CDO)
+    aircraft.velocity=Vmin>ROD
+
 
 ThrustMax = CT1 * (1 - (Hp/CT2) + CT3*(Hp**2))
 #ThrustDesc = CTDescH * ThrustMax
@@ -118,7 +132,5 @@ CDapp = CD0app + CD2app * CL**2
 
 
 
-
-while :
 
 
