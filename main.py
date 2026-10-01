@@ -25,6 +25,8 @@ class Aircraft:
         self.CT3 = CT3
         self.CF1 = CF1
         self.CF2 = CF2
+        self.position = [0,5000]
+
 
 
 # Datos
@@ -160,6 +162,33 @@ def get_CDO (Aircraft_model, MLW):
 
 
 
-while :
+#PLOT
+#function [x,h] = getCDO(aircraft_model,MLW_percent)
+import matplotlib.pyplot as plt
+MLW_percent1=0.8
+MLW_percent2=1
+i=0
+while i<len(aircrafts) :
+    MLW_enUSO=0
+    if i % 2 == 0:
+        MLW_enUSO = MLW_percent1
+    else:
+        MLW_enUSO = MLW_percent2
+    vectorX=[]
+    vectorY=[]
+    while aircrafts[i].position[1] < 40000:
+        x, y = get_CDO(aircrafts[i], MLW_enUSO)
+        vectorX.append(x)
+        vectorY.append(y)
+        aircrafts[i].position[1] += 1000
+
+    plt.plot(vectorX, vectorY, label=aircrafts[i].name)
+    i = i + 1
+
+plt.xlabel("Distance")
+plt.ylabel("Height")
+plt.title("CDO's trajectories")
+plt.legend()
+plt.show()
 
 
