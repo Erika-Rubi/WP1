@@ -26,6 +26,8 @@ class Aircraft:
         self.CF1 = CF1
         self.CF2 = CF2
         self.position = [0,5000]
+        self.velocity = 100
+        self.Weight = 0
 
 
 
@@ -86,23 +88,16 @@ for i in range(len(names)):
     aircrafts.append(aircraft)
 
 
-IAF = [0,5000]
 
 T0 = 288.15
 P0 = 1013.250
 p0 = 1.225
 R = 287.04
 
-hf = 0
-hfmax = 12000
-hfchange = 6000
 
-x = 0
-temps = 0
+def densidad (altura):
 
-def densidad (altura_feets):
-
-    hf = altura_feets
+    hf = altura
     h = hf * 0.3048
     T = T0 - (1.98*(hf/1000))
     P = P0 * (1-(0.0065*(h/T0)))**5.2561
@@ -120,14 +115,17 @@ def get_ThrustMax(CT1, CT2, CT3, Hp):
     ThrustMax = CT1 * (1 - (Hp/CT2) + CT3*(Hp**2))
     return ThrustMax
 
-#ThrustDesc = CTDescH * ThrustMax
 
-def get_ThrustDesc(CTDescL, CTDescApp,ThrustMax, hf):
 
-    if hf > 6000:
+def get_ThrustDesc(CTDescL, CTDescApp, CTDescH, ThrustMax, altura_feets, Hp):
+
+    if altura_feets > Hp:
+        ThrustDescHigh = CTDescH * ThrustMax
+        return ThrustDescHigh
+    elif altura_feets > 6000:
         ThrustDescClean = CTDescL * ThrustMax
         return ThrustDescClean
-    elif hf <= 6000:
+    elif altura_feets <= 6000:
         ThrustDescApp = CTDescApp * ThrustMax
         return ThrustDescApp
 
@@ -135,20 +133,25 @@ def get_CL (altura, Area, Velocidad, Weight):
     CL = 2*Weight/(Area*densidad(altura)*Velocidad)
     return CL
 
-def get_CDapp (CD0app, CD2app, CL):
-    CDapp = CD0app + CD2app * CL**2
+def get_CD (CD0app, CD2app, CD0clean, CD2clean, CL, altura):
+    if altura > 6000:
+        CDclean = CD0clean + CD2clean * CL**2
+        return CDclean
+    elif altura <= 6000:
+        CDapp = CD0app + CD2app * CL**2
+        return CDapp
 
 def get_TSFC (CF1, CF2, VminROD):
-    TSFC = CF1 * (1+ (VminROD/CF2))
+    TSFC = CF1 * (1+ ((VminROD/0.514444)/CF2))
     return TSFC
 
-def get_FF (TSFC, ThrustDesc):
-    FF = TSFC*ThrustDesc
+def get_FF (TSFC, ThrustDesc, t):
+    FF = 1000*TSFC*ThrustDesc*t
     return FF
 #Fuelflow --> Kg/s
 
-def get_AoD (Thrust, CD, Weight,altura,velocidad):
-    AoD = math.asin((0.5*densidad(altura)*CD*(velocidad**2)-Thrust)/Weight)
+def get_AoD (Thrust, CD, Weight,area,altura,velocidad):
+    AoD = math.asin((0.5*densidad(altura)*area*CD*(velocidad**2)-Thrust)/Weight)
     return AoD
 
 def get_CL (Weight, velocity, altura, Area):
@@ -156,15 +159,37 @@ def get_CL (Weight, velocity, altura, Area):
     return CL
 
 
-def get_CDO (Aircraft_model, MLW):
-    moved = [0,0]
-    for i in aircrafts:
-        if Aircraft_model == i.name:
-            aircraft = i
-            break
+def get_CDO (aircraft, MLW):
 
-    Thrust = get_ThrustDesc(aircraft.CTDescL, aircraft.CTDescApp, aircraft.ThrustMax, hf)
-    velocidad = get_VminROD(Thrust, altura, Area,CD,Weight)
+
+    dt = -1
+    moved = [0,0]
+
+
+    if aircraft.position == [0,5000]:
+        aircraft.Weight = aircraft.MLWeight*1000*9.81
+        aircraft.Weight *= MLW
+
+    ThrustMax = get_ThrustMax(aircraft.CT1, aircraft.CT2, aircraft.CT3, aircraft.Hp)
+    altura_feets = aircraft.position[1]
+    altura_metres = altura_feets * 0.3048
+    Thrust = get_ThrustDesc(aircraft.CTDescL, aircraft.CTDescApp,aircraft.CTDescH, ThrustMax, altura_feets, aircraft.Hp)
+    Area = aircraft.S
+    Weight = aircraft.Weight
+    CL = get_CL(Thrust, Area, aircraft.velocity, Weight)
+    CD = get_CD(aircraft.CD0app, aircraft.CD2app, aircraft.CD0clean, aircraft.CD2clean, CL,altura_feets)
+    velocity = get_VminROD(Thrust, altura_metres, Area,CD,Weight)
+    aircraft.velocity = velocity
+    AoD = get_AoD(Thrust, CD, Weight, Area, altura_metres, aircraft.velocity)
+    moved[0] = math.sin(AoD)*velocity*dt #meters
+    moved[1] = (math.cos(AoD)*velocity*dt)/0.3048 #feet
+    aircraft.position[0] = aircraft.position[0] + moved[0]
+    aircraft.position[1] = aircraft.position[1] + moved[1]
+    TSFC = get_TSFC(aircraft.CF1, aircraft.CF2, aircraft.velocity)
+    FF = get_FF(TSFC, Thrust, dt)
+    aircraft.Weight -= FF
+    return aircraft.position
+
 
 
 
@@ -186,7 +211,6 @@ while i<len(aircrafts) :
         x, y = get_CDO(aircrafts[i], MLW_enUSO)
         vectorX.append(x)
         vectorY.append(y)
-        aircrafts[i].position[1] += 1000
 
     plt.plot(vectorX, vectorY, label=aircrafts[i].name)
     i = i + 1
