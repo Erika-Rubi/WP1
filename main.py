@@ -1,3 +1,6 @@
+import math
+
+
 class Aircraft:
     def __init__(self, name, MLWeight, MWeight, MPayload, S,
                  CD0app, CD2app, CD0clean, CD2clean, Hp,
@@ -80,6 +83,9 @@ for i in range(len(names)):
 
     aircrafts.append(aircraft)
 
+
+IAF = [0,5000]
+
 T0 = 288.15
 P0 = 1013.250
 p0 = 1.225
@@ -87,7 +93,7 @@ R = 287.04
 
 hf = 0
 hfmax = 12000
-Hfchange = 6000
+hfchange = 6000
 
 x = 0
 temps = 0
@@ -102,6 +108,8 @@ def densidad (altura_feets):
     p = (P*100/(R*T))
 
     return p
+
+
 def get_VminROD(Thrust, altura, Area, CDO, Weight):
     VminROD = ((((2*Thrust*densidad(altura))**2)*Area)+(4*(3*densidad(altura)**2*Area**2*CDO*4*CDO*Weight**2))**0.5/(2*3*densidad(altura)**2*Area**2*CDO))**0.5
     return VminROD
@@ -132,9 +140,25 @@ def get_TSFC (CF1, CF2, VminROD):
     TSFC = CF1 * (1+ (VminROD/CF2))
     return TSFC
 
-def get_FF (TSFC,temps):
-    FF = TSFC*temps
+def get_FF (TSFC, ThrustDesc):
+    FF = TSFC*ThrustDesc
     return FF
+#Fuelflow --> Kg/s
+
+def get_AoD (Thrust, CD, Weight,altura,velocidad):
+    AoD = math.asin((0.5*densidad(altura)*CD*(velocidad**2)-Thrust)/Weight)
+    return AoD
+
+def get_CL (Weight, velocity, altura, Area):
+    CL = (2*Weight/((velocity**2)*densidad(altura)*Area))
+    return CL
+
+
+def get_CDO (Aircraft_model, MLW):
+    moved = [0,0]
+    velocidad = get_VminROD()
+
+
 
 while :
 
