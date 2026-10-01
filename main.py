@@ -25,6 +25,7 @@ class Aircraft:
         self.CT3 = CT3
         self.CF1 = CF1
         self.CF2 = CF2
+        self.position = [0,5000]
 
 
 # Datos
@@ -154,9 +155,18 @@ def get_CL (Weight, velocity, altura, Area):
     return CL
 
 
+
+
+hf =
 def get_CDO (Aircraft_model, MLW):
     moved = [0,0]
-    velocidad = get_VminROD()
+    for i in aircrafts:
+        if Aircraft_model == i.name:
+            aircraft = i
+            break
+
+    Thrust = get_ThrustDesc(aircraft.CTDescL, aircraft.CTDescApp, aircraft.ThrustMax, hf)
+    velocidad = get_VminROD(Thrust, altura, Area,CD,Weight)
 
 
 
