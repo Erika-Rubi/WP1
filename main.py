@@ -1,11 +1,8 @@
-import mathplotlib
-
-
 class Aircraft:
     def __init__(self, name, MLWeight, MWeight, MPayload, S,
                  CD0app, CD2app, CD0clean, CD2clean, Hp,
                  CTDescH, CTDescL, CTDescApp, CT1, CT2, CT3,
-                 CF1, CF2, position):
+                 CF1, CF2):
 
         self.name = name
         self.MLWeight = MLWeight
@@ -25,10 +22,6 @@ class Aircraft:
         self.CT3 = CT3
         self.CF1 = CF1
         self.CF2 = CF2
-        self.position = position #sera un vector (x,h)
-        velocity=0
-
-
 
 
 # Datos
@@ -97,6 +90,7 @@ hfmax = 12000
 Hfchange = 6000
 
 x = 0
+temps = 0
 
 def densidad (altura_feets):
 
@@ -108,29 +102,40 @@ def densidad (altura_feets):
     p = (P*100/(R*T))
 
     return p
-def get_VminROD(Thrust, altura, Area, CDO, Weight, densidad):
+def get_VminROD(Thrust, altura, Area, CDO, Weight):
     VminROD = ((((2*Thrust*densidad(altura))**2)*Area)+(4*(3*densidad(altura)**2*Area**2*CDO*4*CDO*Weight**2))**0.5/(2*3*densidad(altura)**2*Area**2*CDO))**0.5
     return VminROD
 
-i=0
-while len(aircrafts)>i:
-    aicraft = aircrafts[i]
-    get_VminROD(aicraft.thrust, aicraft.position[1], aicraft.CDO)
-    aircraft.velocity=Vmin>ROD
+def get_ThrustMax(CT1, CT2, CT3, Hp):
+    ThrustMax = CT1 * (1 - (Hp/CT2) + CT3*(Hp**2))
+    return ThrustMax
 
-
-ThrustMax = CT1 * (1 - (Hp/CT2) + CT3*(Hp**2))
 #ThrustDesc = CTDescH * ThrustMax
-ThrustDescClean = CTDescL * ThrustMax
-ThrustDescApp = CTDescApp * ThrustMax
+
+def get_ThrustDesc(CTDescL, CTDescApp,ThrustMax, hf):
+
+    if hf > 6000:
+        ThrustDescClean = CTDescL * ThrustMax
+        return ThrustDescClean
+    elif hf <= 6000:
+        ThrustDescApp = CTDescApp * ThrustMax
+        return ThrustDescApp
 
 def get_CL (altura, Area, Velocidad, Weight):
     CL = 2*Weight/(Area*densidad(altura)*Velocidad)
-    return Cl
+    return CL
 
-CDapp = CD0app + CD2app * CL**2
+def get_CDapp (CD0app, CD2app, CL):
+    CDapp = CD0app + CD2app * CL**2
 
+def get_TSFC (CF1, CF2, VminROD):
+    TSFC = CF1 * (1+ (VminROD/CF2))
+    return TSFC
 
+def get_FF (TSFC,temps):
+    FF = TSFC*temps
+    return FF
 
+while :
 
 
