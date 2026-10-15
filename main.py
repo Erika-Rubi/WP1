@@ -234,29 +234,84 @@ def get_temps (dist, aircraft_name, MLW_enUSO):
 
 #PLOT
 #function [x,h] = getCDO(aircraft_model,MLW_percent)
+#PLOT
 import matplotlib.pyplot as plt
-MLW_percents = [0.8,1]
-i=0
-while i<len(aircrafts) :
+
+FT = 0.3048
+MLW_percents = [0.8, 1]
+
+# ---------- 1) Compute all trajectories once ----------
+trajectories = []   # list of (label, vectorX, vectorY)
+
+for aircraft in aircrafts:
     for MLW_enUSO in MLW_percents:
-        vectorX=[]
-        vectorY=[]
-        aircrafts[i].position[1] = 5000
-        while aircrafts[i].position[1]*0.3048 < 12000:
-            x, y = get_CDO(aircrafts[i], MLW_enUSO)
+        vectorX, vectorY = [], []
+        aircraft.position = [0, 5000]          # reset state (also resets the weight)
+        while aircraft.position[1] * FT < 12000:
+            x, y = get_CDO(aircraft, MLW_enUSO)
             vectorX.append(x)
-            vectorY.append(y*0.3048)
+            vectorY.append(y * FT)
+        label = f"{aircraft.name} [{int(MLW_enUSO * 100)}% MLW]"
+        trajectories.append((label, vectorX, vectorY))
 
-        plt.plot(vectorX, vectorY, label=f"{aircrafts[i].name} {int(MLW_enUSO*100)}% MLW")
-    i = i + 1
+# ---------- 2) One figure per line of stars.txt ----------
+with open("stars.txt") as f:
+    linies = f.readlines()
 
-plt.xlabel("Distance")
-plt.ylabel("Height")
-plt.title("CDO's trajectories (ALBER/1Z)")
-plt.axvline(x=-19260, color="grey", linestyle="--")
-plt.axhline(y=10000*0.3048, color="grey", linestyle="--")
-plt.legend()
-plt.show()
+for linia in linies:
+    elements = linia.split()
+    if not elements:
+        continue
+
+    fig, ax = plt.subplots(figsize=(12, 6))
+    ax.set_title(f"CDO's trajectories ({elements[0]})")
+
+    # All trajectories on this figure
+    for label, vx, vy in trajectories:
+        ax.plot(vx, vy, label=label)
+
+    # Limits are read AFTER plotting, so they match the data
+    xmin, xmax = ax.get_xlim()
+    ymin, ymax = ax.get_ylim()
+
+    n_wp = (len(elements) - 1) // 4
+    for k in range(n_wp):
+        name    = elements[1 + k * 4]
+        min_raw = elements[2 + k * 4]
+        max_raw = elements[3 + k * 4]
+        wp_x    = float(elements[4 + k * 4])
+
+        top = ymax + 500
+
+        ax.vlines(wp_x, ymin=ymin, ymax=top, color="black", lw=1.5)
+        ax.text(wp_x, top, name, ha="center", va="bottom", fontweight="bold")
+
+        if min_raw != "-1":
+            min_alt = float(min_raw) * FT
+            ax.hlines(min_alt, xmin=xmin, xmax=wp_x, color="grey", ls="--", lw=1.5)
+            ax.text(0.01, min_alt + 100, f"Min Alt CDOs in {name}",
+                    transform=ax.get_yaxis_transform(), ha="left", va="bottom")
+
+        if max_raw != "-1":
+            max_alt = float(max_raw) * FT
+            ax.hlines(max_alt, xmin=xmin, xmax=wp_x, color="grey", ls="--", lw=1.5)
+            ax.text(0.01, max_alt + 100, f"Max Alt CDOs in {name}",
+                    transform=ax.get_yaxis_transform(), ha="left", va="bottom")
+
+    ax.set_xlim(xmin, xmax)
+    ax.set_ylim(ymin, max(ymax, top + 600))   # leave room for the WP label
+    ax.set_xlabel("Distance [m]")
+    ax.set_ylabel("Height [m]")
+    ax.legend(loc="upper right", fontsize=8)
+    plt.show()
+    plt.close(fig)
+
+
+
+
+
+
+
 
 
 
