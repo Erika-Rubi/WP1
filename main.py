@@ -234,19 +234,17 @@ def get_temps (dist, aircraft_name, MLW_enUSO):
 
 #PLOT
 #function [x,h] = getCDO(aircraft_model,MLW_percent)
-#PLOT
 import matplotlib.pyplot as plt
 
 FT = 0.3048
 MLW_percents = [0.8, 1]
 
-# ---------- 1) Compute all trajectories once ----------
-trajectories = []   # list of (label, vectorX, vectorY)
+trajectories = []
 
 for aircraft in aircrafts:
     for MLW_enUSO in MLW_percents:
         vectorX, vectorY = [], []
-        aircraft.position = [0, 5000]          # reset state (also resets the weight)
+        aircraft.position = [0, 5000]
         while aircraft.position[1] * FT < 12000:
             x, y = get_CDO(aircraft, MLW_enUSO)
             vectorX.append(x)
@@ -254,7 +252,6 @@ for aircraft in aircrafts:
         label = f"{aircraft.name} [{int(MLW_enUSO * 100)}% MLW]"
         trajectories.append((label, vectorX, vectorY))
 
-# ---------- 2) One figure per line of stars.txt ----------
 with open("stars.txt") as f:
     linies = f.readlines()
 
@@ -266,11 +263,9 @@ for linia in linies:
     fig, ax = plt.subplots(figsize=(12, 6))
     ax.set_title(f"CDO's trajectories ({elements[0]})")
 
-    # All trajectories on this figure
     for label, vx, vy in trajectories:
         ax.plot(vx, vy, label=label)
 
-    # Limits are read AFTER plotting, so they match the data
     xmin, xmax = ax.get_xlim()
     ymin, ymax = ax.get_ylim()
 
@@ -299,7 +294,7 @@ for linia in linies:
                     transform=ax.get_yaxis_transform(), ha="left", va="bottom")
 
     ax.set_xlim(xmin, xmax)
-    ax.set_ylim(ymin, max(ymax, top + 600))   # leave room for the WP label
+    ax.set_ylim(ymin, max(ymax, top + 600))
     ax.set_xlabel("Distance [m]")
     ax.set_ylabel("Height [m]")
     ax.legend(loc="upper right", fontsize=8)
