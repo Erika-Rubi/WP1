@@ -1,5 +1,7 @@
 import math
 
+from fontTools.designspaceLib.types import locationInRegion
+
 
 class Aircraft:
     def __init__(self, name, MLWeight, MWeight, MPayload, S,
@@ -124,33 +126,33 @@ def get_ThrustDesc(CTDescL, CTDescApp, CTDescH, ThrustMax, altura_feets, Hp):
     if altura_feets > Hp:
         ThrustDescHigh = CTDescH * ThrustMax
         return ThrustDescHigh
-    elif altura_feets > 6000:
+    elif altura_feets > hp:
         ThrustDescClean = CTDescL * ThrustMax
         return ThrustDescClean
-    elif altura_feets <= 6000:
+    elif altura_feets <= hp:
         ThrustDescApp = CTDescApp * ThrustMax
         return ThrustDescApp
 
 
 def get_CD (CD0app, CD2app, CD0clean, CD2clean, CL, altura):
-    if altura > 6000:
+    if altura > hp:
         CDclean = CD0clean + CD2clean * CL**2
         return CDclean
-    elif altura <= 6000:
+    elif altura <= hp:
         CDapp = CD0app + CD2app * CL**2
         return CDapp
 
 def get_CD0 (CD0app, CD0clean, altura):
-    if altura > 6000:
+    if altura > hp:
         return CD0clean
-    elif altura <= 6000:
+    elif altura <= hp:
         return CD0app
 
 
 def get_CD2(CD2app, CD2clean, altura):
-    if altura > 6000:
+    if altura > hp:
         return CD2clean
-    elif altura <= 6000:
+    elif altura <= hp:
         return CD2app
 
 
@@ -206,34 +208,55 @@ def get_CDO (aircraft, MLW):
     return aircraft.position
 
 
+hp = 6000
 
+def get_alt (dist, aircraft_name, MLW_enUSO):
+
+    for i in aircrafts:
+        if aircraft_name in i.name:
+            altura = i.position[1]
+            while i.position[0] > -dist:
+                altura = get_CDO(i, MLW_enUSO)[1] * 0.3048
+            return altura
+    return None
+
+def get_temps (dist, aircraft_name, MLW_enUSO):
+
+    for i in aircrafts:
+        if aircraft_name in i.name:
+            altura = i.position[1]
+            temps = 0
+            while i.position[0] > -dist:
+                altura = get_CDO(i, MLW_enUSO)[1] * 0.3048
+                temps += 1
+            return temps
+    return None
 
 #PLOT
 #function [x,h] = getCDO(aircraft_model,MLW_percent)
 import matplotlib.pyplot as plt
-MLW_percent1=0.8
-MLW_percent2=1
+MLW_percents = [0.8,1]
 i=0
 while i<len(aircrafts) :
-    MLW_enUSO=0
-    if i % 2 == 0:
-        MLW_enUSO = MLW_percent1
-    else:
-        MLW_enUSO = MLW_percent2
-    vectorX=[]
-    vectorY=[]
-    while aircrafts[i].position[1] < 12000:
-        x, y = get_CDO(aircrafts[i], MLW_enUSO)
-        vectorX.append(x)
-        vectorY.append(y)
+    for MLW_enUSO in MLW_percents:
+        vectorX=[]
+        vectorY=[]
+        aircrafts[i].position[1] = 5000
+        while aircrafts[i].position[1]*0.3048 < 12000:
+            x, y = get_CDO(aircrafts[i], MLW_enUSO)
+            vectorX.append(x)
+            vectorY.append(y*0.3048)
 
-    plt.plot(vectorX, vectorY, label=aircrafts[i].name)
+        plt.plot(vectorX, vectorY, label=f"{aircrafts[i].name} {int(MLW_enUSO*100)}% MLW")
     i = i + 1
 
 plt.xlabel("Distance")
 plt.ylabel("Height")
-plt.title("CDO's trajectories")
+plt.title("CDO's trajectories (ALBER/1Z)")
+plt.axvline(x=-19260, color="grey", linestyle="--")
+plt.axhline(y=10000*0.3048, color="grey", linestyle="--")
 plt.legend()
 plt.show()
+
 
 
